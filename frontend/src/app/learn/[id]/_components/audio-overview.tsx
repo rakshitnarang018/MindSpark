@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Volume2, Play, Pause, RefreshCw } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { generateAudioAction } from "../../actions/learning-space";
+import { createClient } from "@/utils/supabase/client";
 
 export default function AudioOverview({
   learningSpaceId,
   userId,
-  audio_overview,
+  audio_overview: initialAudioOverview,
 }: {
   learningSpaceId: string;
   userId: string;
@@ -20,7 +21,50 @@ export default function AudioOverview({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [audioOverview, setAudioOverview] = useState<string | null>(initialAudioOverview);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Realtime subscription for audio updates
+  useEffect(() => {
+    const supabase = createClient();
+    
+    console.log("Setting up audio-overview realtime subscription");
+    
+    const channel = supabase
+      .channel(`audio-overview`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "learning_space",
+          filter: `id=eq.${learningSpaceId}`,
+        },
+        (payload) => {
+          console.log("Realtime audio update received:", payload);
+          if (payload.new?.audio_overview) {
+            console.log("New audio URL:", payload.new.audio_overview);
+            setAudioOverview(payload.new.audio_overview);
+            
+            // Update audio element with new source
+            if (audioRef.current) {
+              audioRef.current.src = payload.new.audio_overview;
+              audioRef.current.load();
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          console.log("Successfully subscribed to audio-overview channel!");
+        }
+      });
+
+    return () => {
+      console.log("Cleaning up audio-overview subscription");
+      supabase.removeChannel(channel);
+    };
+  }, [learningSpaceId]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -45,7 +89,7 @@ export default function AudioOverview({
       audio.removeEventListener("canplay", handleCanPlay);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [audio_overview]);
+  }, [audioOverview]); // Changed dependency from audio_overview to audioOverview
 
   const handleGenerateAudio = async () => {
     setIsGenerating(true);
@@ -55,16 +99,11 @@ export default function AudioOverview({
     if (res.error) {
       console.error("Error generating audio:", res.error);
       setIsGenerating(false);
-      // Optionally, you can show a toast notification or alert
     } else {
-      console.log("Audio generated successfully:");
+      console.log("Audio generated successfully:", res);
       setIsGenerating(false);
-      // set audio_url or refresh the audio overview
-      if (audioRef.current) {
-        audioRef.current.src = res.audio_url;
-        audioRef.current.load();
-      }
-      // Optionally, you can refresh the audio overview or redirect
+      // Audio will be updated via realtime subscription
+      // No need to manually update here
     }
   };
 
@@ -117,10 +156,10 @@ export default function AudioOverview({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {audio_overview ? (
+        {audioOverview ? (
           <>
             {/* Hidden Audio Element */}
-            <audio ref={audioRef} src={audio_overview} preload="metadata" />
+            <audio ref={audioRef} src={audioOverview} preload="metadata" />
 
             {/* Audio Player Section */}
             <div className="bg-white rounded-lg p-4 border border-orange-200">
@@ -172,7 +211,7 @@ export default function AudioOverview({
             {/* Audio Info */}
             <div className="bg-white rounded-lg p-3 border border-orange-200">
               <p className="text-sm text-gray-600">
-                🎯 AI-generated audio summary covering key concepts, important
+                AI-generated audio summary covering key concepts, important
                 points, and learning objectives from your materials.
               </p>
             </div>

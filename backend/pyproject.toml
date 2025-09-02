@@ -15,6 +15,7 @@ dependencies = [
     "boto3>=1.39.3",
     "fastapi>=0.115.14",
     "uvicorn>=0.35.0",
+    "edge-tts>=7.2.3",
 ]
 
 [dependency-groups]

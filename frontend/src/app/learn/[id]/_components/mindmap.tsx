@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw } from "lucide-react";
+import { Download, RefreshCw, Maximize2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function Mindmap({
@@ -14,13 +14,59 @@ export default function Mindmap({
   learningSpaceId: string;
   mindmap: string | null;
 }) {
-  const [isGenerating, setIsGenerating] = useState(mindmap ? false : true);
+  const [isGenerating, setIsGenerating] = useState(!mindmap);
   const [mindmapUrl, setMindmapUrl] = useState(mindmap);
+  const [htmlContent, setHtmlContent] = useState<string>("");
+  const [isLoadingHtml, setIsLoadingHtml] = useState(false);
+  const [error, setError] = useState<string>("");
 
   const client = createClient();
 
+  // Function to fetch HTML content
+  const fetchHtmlContent = async (url: string) => {
+    if (!url) return;
+    
+    setIsLoadingHtml(true);
+    setError("");
+    
+    try {
+      console.log("Fetching mindmap from:", url);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const html = await response.text();
+      console.log("HTML content length:", html.length);
+      
+      if (html.trim().length === 0) {
+        throw new Error("Empty HTML content received");
+      }
+      
+      setHtmlContent(html);
+    } catch (error) {
+      console.error("Error fetching mindmap HTML:", error);
+      setError(error instanceof Error ? error.message : "Failed to load mindmap");
+    } finally {
+      setIsLoadingHtml(false);
+    }
+  };
+
+  // Fetch HTML content when mindmapUrl is available
   useEffect(() => {
-    // get realtime update for quiz if it has been generated
+    if (mindmapUrl && !isGenerating) {
+      console.log("Mindmap URL available:", mindmapUrl);
+      fetchHtmlContent(mindmapUrl);
+    }
+  }, [mindmapUrl, isGenerating]);
+
+  useEffect(() => {
+    console.log("Component state:", { isGenerating, mindmapUrl, htmlContent: htmlContent.length });
+  }, [isGenerating, mindmapUrl, htmlContent]);
+
+  useEffect(() => {
+    // get realtime update for mindmap if it has been generated
     const channelName = "channel:mindmap";
     const channel = client
       .channel(channelName)
@@ -33,12 +79,16 @@ export default function Mindmap({
           filter: `id=eq.${learningSpaceId}`,
         },
         (payload) => {
-          // console.log(payload);
+          console.log("Realtime update received:", payload);
           //@ts-expect-error this exists
           if (payload.new?.mindmap) {
+            console.log("New mindmap URL:", payload.new.mindmap);
             setIsGenerating(false);
             //@ts-expect-error this exists
-            setMindmapUrl(payload.new.mindmap);
+            const newUrl = payload.new.mindmap;
+            setMindmapUrl(newUrl);
+            // Fetch HTML content for the new URL
+            setTimeout(() => fetchHtmlContent(newUrl), 1000); // Wait 1 second for file to be available
           }
         }
       )
@@ -60,6 +110,12 @@ export default function Mindmap({
   const handleDownload = () => {
     if (mindmapUrl) {
       window.open(mindmapUrl, "_blank");
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (mindmapUrl) {
+      window.open(mindmapUrl, "_blank", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes");
     }
   };
 
@@ -85,13 +141,23 @@ export default function Mindmap({
             </div>
             Concept Mind Map
           </div>
-          {!isGenerating && (
+          {!isGenerating && mindmapUrl && (
             <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleFullscreen}
+                className="text-purple-600 hover:text-purple-700 hover:bg-purple-100"
+                title="View in full screen"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleDownload}
                 className="text-purple-600 hover:text-purple-700 hover:bg-purple-100"
+                title="Open in new tab"
               >
                 <Download className="w-4 h-4" />
               </Button>
@@ -102,22 +168,53 @@ export default function Mindmap({
       <CardContent className="space-y-4">
         {!isGenerating ? (
           <>
-            {/* Mindmap Image Display */}
-            {mindmapUrl && (
-              <div className="bg-white rounded-lg p-4 border border-purple-200">
-                <img
-                  src={mindmapUrl}
-                  alt="mindmap"
-                  className="w-full h-auto rounded-lg shadow-sm"
-                />
+            {/* Mindmap HTML Display */}
+            {mindmapUrl ? (
+              <div className="bg-white rounded-lg border border-purple-200 overflow-hidden">
+                {isLoadingHtml ? (
+                  <div className="flex items-center justify-center h-96">
+                    <RefreshCw className="w-6 h-6 text-purple-500 animate-spin" />
+                    <span className="ml-2 text-gray-600">Loading mindmap...</span>
+                  </div>
+                ) : error ? (
+                  <div className="flex flex-col items-center justify-center h-96 text-center p-4">
+                    <p className="text-red-500 mb-2">Failed to load mindmap</p>
+                    <p className="text-gray-500 text-sm mb-4">{error}</p>
+                    <Button 
+                      onClick={() => fetchHtmlContent(mindmapUrl)} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Retry
+                    </Button>
+                  </div>
+                ) : htmlContent ? (
+                  <div 
+                    className="w-full h-96 overflow-auto"
+                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-96">
+                    <p className="text-gray-500">No mindmap content available</p>
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-2"
+                    >
+                      Refresh Page
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
+            ) : null}
 
             {/* Mindmap Info */}
             <div className="bg-white rounded-lg p-3 border border-purple-200">
               <p className="text-sm text-gray-600">
                 🧠 AI-generated visual mind map showing the relationships
                 between key concepts and topics from your learning materials.
+                {mindmapUrl && " Click the expand button to view in full screen."}
               </p>
             </div>
           </>
