@@ -35,7 +35,7 @@ Students and learners face information overload. MindSpark extracts the signal f
 * LangGraph — orchestrated agent workflows
 * LangChain — LLM adapters and prompts
 * Supabase — Postgres DB + object storage
-* Boto3 + AWS Polly — TTS and S3 integration
+* TTS integration
 
 **Frontend**
 
