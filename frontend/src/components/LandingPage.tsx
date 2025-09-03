@@ -217,7 +217,7 @@ export default function LandingPage() {
             Created by{" "}
             <span className="text-blue-400 hover:underline">
               <a
-                href="https://shashankrajak.in"
+                href=""
                 target="_blank"
                 rel="noopener noreferrer"
               >
