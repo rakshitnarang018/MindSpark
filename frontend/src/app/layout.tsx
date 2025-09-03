@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduAI - AI-Powered Educational Platform",
+  title: "MindSpark - AI-Powered Educational Platform",
   description:
     "Transform education with AI-powered personalized learning for teachers and students",
 };

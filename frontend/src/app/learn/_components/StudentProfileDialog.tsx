@@ -116,7 +116,7 @@ export default function StudentProfileDialog({
       >
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            Welcome to EduAI, {userName}! 🎓
+            Welcome to MindSpark, {userName}! 🎓
           </DialogTitle>
           <DialogDescription className="text-center text-lg">
             Let&apos;s create your learning profile to personalize your

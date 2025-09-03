@@ -6,7 +6,7 @@ import ProfileSummary from "./_components/ProfileSummary";
 import ProfileForm from "./_components/ProfileForm";
 
 export const metadata = {
-  title: "Profile | EduAI",
+  title: "Profile | MindSpark",
   description: "Manage your student profile and learning preferences",
 };
 

@@ -59,7 +59,7 @@ export default function RoleSelector({
               </svg>
             </div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Welcome to EduAI, {userFirstName}! 🎉
+              Welcome to MindSpark, {userFirstName}! 🎉
             </h1>
             <p className="text-lg text-gray-600">
               Let&apos;s get you started with your personalized learning journey

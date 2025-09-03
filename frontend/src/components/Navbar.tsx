@@ -35,7 +35,7 @@ export default function Navbar() {
                 />
               </svg>
             </div>
-            <span className="text-xl font-bold text-gray-900">EduAI</span>
+            <span className="text-xl font-bold text-gray-900">MindSpark</span>
           </Link>
         </div>
 

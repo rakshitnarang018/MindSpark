@@ -168,7 +168,7 @@ export default function LandingPage() {
           </h2>
           <p className="text-lg text-gray-600 mb-8">
             Join thousands of educators and students who are already
-            experiencing the future of education with EduAI.
+            experiencing the future of education with MindSpark.
           </p>
           <SignedOut>
             <SignUpButton>
@@ -205,12 +205,12 @@ export default function LandingPage() {
               />
             </svg>
           </div>
-          <h3 className="text-2xl font-bold mb-2">EduAI</h3>
+          <h3 className="text-2xl font-bold mb-2">MindSpark</h3>
           <p className="text-gray-400 mb-6">
             Transforming education through AI-powered personalized learning
           </p>
           <div className="text-sm text-gray-500">
-            © 2025 EduAI. All rights reserved.
+            © 2025 MindSpark. All rights reserved.
           </div>
 
           <div className="mt-6 text-gray-400">
@@ -221,7 +221,7 @@ export default function LandingPage() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Rakshit Narang
+                MindSpark Team
               </a>
             </span>
           </div>
