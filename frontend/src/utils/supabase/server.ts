@@ -25,7 +25,7 @@ export async function createClient() {
     {
       cookies: {
         getAll: () =>
-          cookieStore.getAll().map(c => ({ name: c.name, value: c.value, options: c.options })),
+          cookieStore.getAll(),
         setAll: (cookiesToSet) => {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
