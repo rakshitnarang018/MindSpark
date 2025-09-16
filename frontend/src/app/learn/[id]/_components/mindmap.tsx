@@ -25,25 +25,25 @@ export default function Mindmap({
   // Function to fetch HTML content
   const fetchHtmlContent = async (url: string) => {
     if (!url) return;
-    
+
     setIsLoadingHtml(true);
     setError("");
-    
+
     try {
       console.log("Fetching mindmap from:", url);
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const html = await response.text();
       console.log("HTML content length:", html.length);
-      
+
       if (html.trim().length === 0) {
         throw new Error("Empty HTML content received");
       }
-      
+
       setHtmlContent(html);
     } catch (error) {
       console.error("Error fetching mindmap HTML:", error);
@@ -78,14 +78,17 @@ export default function Mindmap({
           table: "learning_space",
           filter: `id=eq.${learningSpaceId}`,
         },
-        (payload) => {
+        (payload: unknown) => {
           console.log("Realtime update received:", payload);
-          //@ts-expect-error this exists
-          if (payload.new?.mindmap) {
-            console.log("New mindmap URL:", payload.new.mindmap);
+
+          // Narrow payload.new safely to a known shape before accessing .mindmap
+          // Accept that payload might be unknown; cast only after checking existence
+          const newObj = (payload as any)?.new as { mindmap?: string } | undefined;
+
+          if (newObj?.mindmap) {
+            console.log("New mindmap URL:", newObj.mindmap);
             setIsGenerating(false);
-            //@ts-expect-error this exists
-            const newUrl = payload.new.mindmap;
+            const newUrl = newObj.mindmap;
             setMindmapUrl(newUrl);
             // Fetch HTML content for the new URL
             setTimeout(() => fetchHtmlContent(newUrl), 1000); // Wait 1 second for file to be available
