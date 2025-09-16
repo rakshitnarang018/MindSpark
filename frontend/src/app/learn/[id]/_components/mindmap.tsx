@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -6,6 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Maximize2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+
+// Realtime payload type (keeps it minimal and ESLint/TS-friendly)
+interface RealtimePayload {
+  new?: {
+    mindmap?: string;
+    [key: string]: unknown;
+  };
+  old?: Record<string, unknown>;
+  [key: string]: unknown;
+}
 
 export default function Mindmap({
   learningSpaceId,
@@ -78,20 +87,17 @@ export default function Mindmap({
           table: "learning_space",
           filter: `id=eq.${learningSpaceId}`,
         },
-        (payload: unknown) => {
+        (payload: RealtimePayload) => {
           console.log("Realtime update received:", payload);
 
-          // Narrow payload.new safely to a known shape before accessing .mindmap
-          // Accept that payload might be unknown; cast only after checking existence
-          const newObj = (payload as any)?.new as { mindmap?: string } | undefined;
-
-          if (newObj?.mindmap) {
-            console.log("New mindmap URL:", newObj.mindmap);
+          // No casts to `any` — safely check shape using the defined interface
+          const newMindmapUrl = payload.new?.mindmap;
+          if (newMindmapUrl) {
+            console.log("New mindmap URL:", newMindmapUrl);
             setIsGenerating(false);
-            const newUrl = newObj.mindmap;
-            setMindmapUrl(newUrl);
+            setMindmapUrl(newMindmapUrl);
             // Fetch HTML content for the new URL
-            setTimeout(() => fetchHtmlContent(newUrl), 1000); // Wait 1 second for file to be available
+            setTimeout(() => fetchHtmlContent(newMindmapUrl), 1000); // Wait 1 second for file to be available
           }
         }
       )
