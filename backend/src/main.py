@@ -13,6 +13,7 @@ app = FastAPI()
 origins = [
     "*",
     "http://localhost:3000",
+    "https://mind-spark-1xi5fzh0k-hhs-projects-a76b2af3.vercel.app/"
 ]
 
 # Basic logging configuration
